@@ -59,6 +59,7 @@ func (sh *ServerHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	responseJSON := &CrawlingResponseJSON{}
+	// @TODO make it concurrent
 	for _, location := range payload.Locations {
 		log.Println(location.URL)
 		locationInfo := CrawlingLocationResult{URL: location.URL}
