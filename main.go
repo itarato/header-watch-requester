@@ -30,8 +30,10 @@ type CrawlingInfoJSON struct {
 
 // CrawlingLocationResult keeps records of location crawl results.
 type CrawlingLocationResult struct {
-	URL     string            `json:"url"`
-	Headers map[string]string `json:"headers"`
+	URL        string              `json:"url"`
+	StatusCode int                 `json:"status_code"`
+	Protocol   string              `json:"protocol"`
+	Headers    map[string][]string `json:"headers"`
 }
 
 // CrawlingResponseJSON is the returned object.
@@ -59,7 +61,17 @@ func (sh *ServerHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	responseJSON := &CrawlingResponseJSON{}
 	for _, location := range payload.Locations {
 		log.Println(location.URL)
-		locationInfo := CrawlingLocationResult{URL: location.URL, Headers: make(map[string]string)}
+		locationInfo := CrawlingLocationResult{URL: location.URL}
+
+		resp, err := LoadURL(location.URL)
+		if err != nil {
+			log.Println("unable to fetch header for: " + location.URL)
+		} else {
+			locationInfo.Headers = resp.Header
+			locationInfo.StatusCode = resp.StatusCode
+			locationInfo.Protocol = resp.Proto
+		}
+
 		responseJSON.Locations = append(responseJSON.Locations, locationInfo)
 	}
 
@@ -74,6 +86,16 @@ func (sh *ServerHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	rw.Write(jsonOut)
 }
 
+// LoadURL loads the path and returns the header info.
+func LoadURL(path string) (*http.Response, error) {
+	resp, err := http.Get(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 func main() {
 	log.Println("crawler has been started")
 
@@ -81,8 +103,8 @@ func main() {
 		// @TODO make it a configuration
 		Addr:           "localhost:8080",
 		Handler:        &ServerHandler{},
-		ReadTimeout:    time.Second * 60,
-		WriteTimeout:   time.Second * 60,
+		ReadTimeout:    time.Second * 30,
+		WriteTimeout:   time.Second * 30,
 		MaxHeaderBytes: 0,
 	}
 
