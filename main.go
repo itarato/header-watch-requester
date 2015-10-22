@@ -1,5 +1,5 @@
 // @TODO
-// - make it secure (maybe POST or JWT)
+// - make it secure (maybe JWT)
 
 package main
 
@@ -21,6 +21,7 @@ type ServerHandler struct {
 // CrawlingLocation keeps the location info in incoming JSON payload.
 type CrawlingLocation struct {
 	URL string `json:"url"`
+	ID  string `json:"id"`
 }
 
 // CrawlingInfoJSON is the format of the incoming JSON.
@@ -31,6 +32,7 @@ type CrawlingInfoJSON struct {
 // CrawlingLocationResult keeps records of location crawl results.
 type CrawlingLocationResult struct {
 	URL        string              `json:"url"`
+	ID         string              `json:"id"`
 	StatusCode int                 `json:"status_code"`
 	Protocol   string              `json:"protocol"`
 	Headers    map[string][]string `json:"headers"`
@@ -62,7 +64,7 @@ func (sh *ServerHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// @TODO make it concurrent
 	for _, location := range payload.Locations {
 		log.Println(location.URL)
-		locationInfo := CrawlingLocationResult{URL: location.URL}
+		locationInfo := CrawlingLocationResult{URL: location.URL, ID: location.ID}
 
 		resp, err := LoadURL(location.URL)
 		if err != nil {
